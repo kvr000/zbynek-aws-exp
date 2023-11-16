@@ -10,6 +10,7 @@ import botocore.errorfactory
 dynamodb = boto3.client("dynamodb")
 dynamodbResource = boto3.resource("dynamodb")
 
+
 def main():
     table = dynamodbResource.Table("zbynek_aws_exp_delete_conditional")
 
@@ -87,8 +88,10 @@ def main():
         )
         assert False
     except dynamodb.exceptions.ConditionalCheckFailedException as ex:
-        #assert response.get('Attributes') is not None
-        pass
+        item = ex.response.get('Item')
+        assert item is not None
+        assert item['id']['S'] == "hello"
+        assert item['keycounter']['N'] == "1"
 
     try:
         response = table.delete_item(
@@ -101,7 +104,8 @@ def main():
             ConditionExpression="attribute_exists(not_existent)",
         )
     except dynamodb.exceptions.ConditionalCheckFailedException as ex:
-        assert response.get('Attributes') is None
+        item = ex.response.get('Item')
+        assert item is None
 
 
 
